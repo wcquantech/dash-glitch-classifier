@@ -104,3 +104,29 @@
     margin-top: 1rem;
 }
 
+#data-preview {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    justify-content: center;
+    align-items: center;
+}   
+
+#data-preview button {
+    border: none;
+    border-radius: 6px;
+    background: #2db9f5;
+    color: #fff;
+    font-size: 1rem;
+    padding: 0.5rem 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+#data-preview button:hover {
+    background: #1f80aa;
+}
+
+#data-preview button:active {
+    transform: scale(0.8);
+}

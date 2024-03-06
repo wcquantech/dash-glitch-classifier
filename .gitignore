@@ -72,4 +72,6 @@ dmypy.json
 cython_debug/
 /models
 /src/models
+.DS_Store
 /src/.DS_Store
+/files

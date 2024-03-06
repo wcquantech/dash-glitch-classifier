@@ -1,8 +1,13 @@
-from dash import Dash, dcc, html, Input, Output, callback_context as ctx
+from dash import Dash, dcc, html, Input, Output, callback_context as ctx, no_update
 import dash_bootstrap_components as dbc
 import dash_uploader as du
 import time
+import os
 import uuid
+from dotenv import load_dotenv
+from helpers import find_gps, plot_4s_strain, plot_final_spectrogram
+
+load_dotenv()
 
 app = Dash(__name__, 
            external_stylesheets=[dbc.themes.COSMO, dbc.icons.FONT_AWESOME], 
@@ -10,6 +15,12 @@ app = Dash(__name__,
            )
 
 app.title = "GW Glitch Classifier"
+
+# Global variables
+upload_path = os.environ.get('UPLOAD_PATH')
+du.configure_upload(app, upload_path)
+gps = 0
+strain_path = ""
 
 about = html.Div([
     html.H1("About This App"),
@@ -31,7 +42,11 @@ classifier_content = html.Div([
                     upload_id=uuid.uuid4(),
                     filetypes=["hdf5"],
                     max_files=1,
-                    disabled=False
+                    disabled=False,
+                    max_file_size=1000,
+                    pause_button=True,
+                    text_disabled="Upload successful!",
+                    text_completed="Upload successful!",
                 )
             )
         ]),
@@ -52,7 +67,7 @@ classifier_content = html.Div([
         html.Div([
             html.Button([
                 html.I(className="fa-solid fa-minus")
-            ], id="time-slider-minus", n_clicks=0),
+            ], id="time-slider-minus", n_clicks=0, disabled=True),
             dcc.Slider(
                 id="time-slider",
                 min=2,
@@ -61,21 +76,22 @@ classifier_content = html.Div([
                 included=False,
                 marks=None,
                 value=2048,
+                disabled=True,
                 tooltip={"always_visible": True, "placement": "bottom"}
             ),
             html.Button([
                 html.I(className="fa-solid fa-plus")
-            ], id="time-slider-plus", n_clicks=0)
+            ], id="time-slider-plus", n_clicks=0, disabled=True)
         ], className="time-slider-div")
     ]),
     html.Div([
         html.H4("4. Data preview"),
-        html.Div(id="data-preview", children=[])
+        html.Div(id="data-preview", children=[]),
     ]),
     html.Div([
-        html.H4("5. Prediction"),
+        html.H4("5. Glitch classification"),
         html.P("Multi-duration Q-Transformed spectrogram of the selected time", style={"text-align": "center"}),
-        html.Div(id="prediction", children=[])
+        html.Div(id="classification-result", children=[])
     ])
 
 ], className="classifier-content")
@@ -103,7 +119,7 @@ page = html.Div([
 
 app.layout = page
 
-
+# Handle page change
 @app.callback(Output("page-content", "children"),
               Input("about", "n_clicks"),
               Input("classifier", "n_clicks"))
@@ -117,6 +133,22 @@ def page_change(about_n_clicks, classifier_n_clicks):
         return classifier
     else:
         return html.P("This page does not exist.")
+    
+
+# Handle strain data upload
+@app.callback(Output("time-slider", "disabled"),
+              Output("strain-uploader", "disabled"),
+              Input("strain-uploader", "isCompleted"),
+              Input("strain-uploader", "upload_id"),
+              Input("strain-uploader", "fileNames"))
+def strain_upload(isCompleted, upload_id, fileNames):
+    global strain_path
+    global gps
+    if isCompleted:
+        strain_path = os.path.join(upload_path, str(upload_id), fileNames[0])
+        gps = find_gps(strain_path)
+        return False, True
+    return no_update, no_update
 
 
 if __name__ == "__main__":
