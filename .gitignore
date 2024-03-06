@@ -70,5 +70,6 @@ dmypy.json
 .pyre/
 .pytype/
 cython_debug/
-/model
-
+/models
+/src/models
+/src/.DS_Store
