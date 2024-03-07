@@ -135,3 +135,7 @@
 #data-preview button:active {
     transform: scale(0.8);
 }
+
+#classification-result {
+    text-align: center;
+}

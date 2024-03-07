@@ -1,10 +1,12 @@
 from dash import Dash, dcc, html, Input, Output, State, callback_context as ctx, no_update
 import dash_bootstrap_components as dbc
 import dash_uploader as du
+from dash.exceptions import PreventUpdate
 import os
 import uuid
 from dotenv import load_dotenv
 from helpers import find_gps, plot_4s_strain, plot_final_spectrogram
+from classifier import classify
 
 load_dotenv()
 
@@ -20,6 +22,14 @@ upload_path = os.environ.get('UPLOAD_PATH')
 du.configure_upload(app, upload_path)
 gps = 0
 strain_path = ""
+
+# Define the class names
+glitch_class_list = [
+    "1080Lines", "1400Ripples", "Air_Compressor", "Blip", "Chirp", "Extremely_Loud", "Helix",
+    "Koi_Fish", "Light_Modulation", "Low_Frequency_Burst", "Low_Frequency_Lines", "No_Glitch",
+    "Paired_Doves", "Power_Line", "Repeating_Blips", "Scattered_Light", "Scratchy", "Tomte",
+    "Violin_Mode", "Wandering_Light", "Whistle"
+]
 
 about = html.Div([
     html.H1("About This App"),
@@ -90,8 +100,7 @@ classifier_content = html.Div([
     ]),
     html.Div([
         html.H4("5. Glitch classification"),
-        html.P("Multi-duration Q-Transformed spectrogram of the selected time", style={"text-align": "center"}),
-        html.Div(id="classification-result", children=[])
+        dbc.Spinner(html.Div(id="classification-result", children=[]), color="primary")
     ])
 
 ], className="classifier-content")
@@ -197,6 +206,30 @@ def data_preview(value):
         except Exception as e:
             return f"Error: {e}. Please try again."
     return no_update
+
+# Handle multi-duaration Q transform and classification
+@app.callback(Output("classification-result", "children"),
+              Input("submit", "n_clicks"),
+              Input("time-slider", "value"))
+def classification(n_clicks, value):
+    global strain_path
+    if not n_clicks:
+        raise PreventUpdate
+    imgsrc = plot_final_spectrogram(hdf5=strain_path, start=value-2, end=value+2)
+    buf = plot_final_spectrogram(hdf5=strain_path, start=value-2, end=value+2, to_predict=True)
+    prediction, prob_1, prob_2 = classify("Inception-V3", buf, glitch_class_list)
+
+    text = html.P("Multi-duration Q-Transformed spectrogram of the selected time")
+    if prob_2 is None:
+        msg = html.Div([html.P("{} ({:.3%})".format(prediction, prob_1))])
+    else:
+        msg = html.Div([
+            html.P("{} ({:.3%})".format(prediction, prob_1)),
+            html.P("{} ({:.3%})".format(prob_2[1], prob_2[0]))
+        ])
+    return [text, html.Img(src=imgsrc), msg]
+
+
 
 if __name__ == "__main__":
     app.run_server(debug=True)
