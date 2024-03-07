@@ -65,10 +65,11 @@ classifier_content = html.Div([
         dcc.Dropdown(
             id="model-dropdown",
             options=[
-                {"label": "Model 1", "value": "model1"},
-                {"label": "Model 2", "value": "model2"},
+                {"label": "Inception-V3", "value": "Inception-V3"},
+                {"label": "GoogLeNet", "value": "GoogLeNet"},
             ],
-            value="model1"
+            value="Inception-V3",
+            clearable=False
         ),
     ]),
     html.Div([
@@ -228,8 +229,9 @@ def data_preview(value):
 # Handle multi-duaration Q transform and classification
 @app.callback(Output("classification-result", "children"),
               Input("submit", "n_clicks"),
-              Input("time-slider", "value"))
-def classification(n_clicks, value):
+              Input("time-slider", "value"),
+              Input("model-dropdown", "value"))
+def classification(n_clicks, value, model):
     global strain_path
     global gps
     if not n_clicks:
@@ -237,7 +239,7 @@ def classification(n_clicks, value):
     try:
         imgsrc = plot_final_spectrogram(hdf5=strain_path, start=value-2, end=value+2)
         buf = plot_final_spectrogram(hdf5=strain_path, start=value-2, end=value+2, to_predict=True)
-        prediction, prob_1, prob_2 = classify("Inception-V3", buf, glitch_class_list)
+        prediction, prob_1, prob_2 = classify(model, buf, glitch_class_list)
 
         text = html.Div([
             html.P("Multi-duration Q-Transformed spectrogram of the selected time:"),

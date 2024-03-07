@@ -48,9 +48,3 @@ def classify(model_name, imgsrc, class_list):
         classes.pop(idx)
         prob_2 = max(softmaxed)
         return classes[pred[0]], prob_1, [prob_2, classes[softmaxed.index(prob_2)]]
-    
-
-if __name__ == "__main__":
-    print(config_inception)
-    print(config_googlenet)
-
