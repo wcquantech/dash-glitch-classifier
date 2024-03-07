@@ -1,3 +1,5 @@
+import os
+os.environ['MPLBACKEND'] = 'agg'
 from gwpy.timeseries import TimeSeries
 import torchvision.transforms as transforms
 import io
@@ -16,7 +18,7 @@ def plot_4s_strain(hdf5, start, end):
 
     # Plot the data in time domain
     tdata = TimeSeries.read(hdf5, format="hdf5.gwosc", start=gps+start, end=gps+end)
-    plot = tdata.plot(figsize=[8, 4])
+    plot = tdata.plot(figsize=[7, 4])
     ax = plot.gca()
     ax.set_epoch(gps)
     ax.set_title("Time-domain")
@@ -28,7 +30,7 @@ def plot_4s_strain(hdf5, start, end):
     # Perform Q Transform and plot the result
     target = (2 * gps + start + end) / 2
     tq = tdata.q_transform(frange=(10, 1000), outseg=(target-2, target+2))
-    plot = tq.plot(figsize=[8, 4])
+    plot = tq.plot(figsize=[7, 4])
     ax = plot.gca()
     ax.set_title("Q-Transformed")
     ax.set_yscale("log")
@@ -45,10 +47,15 @@ def plot_4s_strain(hdf5, start, end):
     concat.paste(img1, (0, 0))
     concat.paste(img2, (0, img1.height))
 
+    # Save the image to the file and encode it
     buf = io.BytesIO()
     concat.save(buf, format="PNG")
     buf.seek(0)
     encoded = base64.b64encode(buf.read()).decode("ascii").replace("\n", "")
+
+    buf1.close()
+    buf2.close()
+    buf.close()
 
     return f"data:image/png;base64,{encoded}"
 
@@ -124,4 +131,3 @@ def plot_final_spectrogram(hdf5, start, end, save=False, to_predict=False):
         buf.seek(0)
         encoded = base64.b64encode(buf.read()).decode("ascii").replace("\n", "")
         return f"data:image/png;base64,{encoded}"
-

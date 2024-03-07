@@ -1,7 +1,6 @@
-from dash import Dash, dcc, html, Input, Output, callback_context as ctx, no_update
+from dash import Dash, dcc, html, Input, Output, State, callback_context as ctx, no_update
 import dash_bootstrap_components as dbc
 import dash_uploader as du
-import time
 import os
 import uuid
 from dotenv import load_dotenv
@@ -82,11 +81,12 @@ classifier_content = html.Div([
             html.Button([
                 html.I(className="fa-solid fa-plus")
             ], id="time-slider-plus", n_clicks=0, disabled=True)
-        ], className="time-slider-div")
+        ], className="time-slider-div"),
+        html.H5(f"GPS Time: -", id="gps-time")
     ]),
     html.Div([
         html.H4("4. Data preview"),
-        html.Div(id="data-preview", children=[]),
+        dbc.Spinner(html.Div(id="data-preview", children=[]), color="primary"),
     ]),
     html.Div([
         html.H4("5. Glitch classification"),
@@ -134,10 +134,11 @@ def page_change(about_n_clicks, classifier_n_clicks):
     else:
         return html.P("This page does not exist.")
     
-
 # Handle strain data upload
 @app.callback(Output("time-slider", "disabled"),
               Output("strain-uploader", "disabled"),
+              Output("time-slider-minus", "disabled"),
+              Output("time-slider-plus", "disabled"),
               Input("strain-uploader", "isCompleted"),
               Input("strain-uploader", "upload_id"),
               Input("strain-uploader", "fileNames"))
@@ -147,9 +148,55 @@ def strain_upload(isCompleted, upload_id, fileNames):
     if isCompleted:
         strain_path = os.path.join(upload_path, str(upload_id), fileNames[0])
         gps = find_gps(strain_path)
-        return False, True
-    return no_update, no_update
+        return False, True, False, False
+    return no_update, no_update, no_update, no_update
 
+# Handle showing GPS time
+@app.callback(Output("gps-time", "children"),
+              Input("time-slider", "value"))
+def update_gps_time(value):
+    global gps
+    if gps == 0:
+        return "GPS: -"
+    return f"GPS Time: {gps + value}"
+
+# Handle time buttons
+@app.callback(Output("time-slider", "value"),
+              Input("time-slider-minus", "n_clicks"),
+              Input("time-slider-plus", "n_clicks"),
+              State("time-slider", "value"))
+def time_update(minus_n_clicks, plus_n_clicks, value):
+    if not ctx.triggered:
+        return no_update
+    button_id = ctx.triggered[0]["prop_id"].split(".")[0]
+    if button_id == "time-slider-minus":
+        if value-0.1 >= 2:
+            return value - 0.1
+        else: 
+            return value
+    elif button_id == "time-slider-plus":
+        if value+0.1 <= 4094:
+            return value + 0.1
+        else:
+            return value
+    else:
+        return no_update
+
+# Handle data preview
+@app.callback(Output("data-preview", "children"),
+              Input("time-slider", "value"))
+def data_preview(value):
+    global strain_path
+    if value:
+        try:
+            image = plot_4s_strain(strain_path, value-2, value+2)
+            return [
+                html.Img(src=image),
+                html.Button("Submit", id="submit", n_clicks=0)
+            ]
+        except Exception as e:
+            return f"Error: {e}. Please try again."
+    return no_update
 
 if __name__ == "__main__":
     app.run_server(debug=True)

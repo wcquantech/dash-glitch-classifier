@@ -104,6 +104,11 @@
     margin-top: 1rem;
 }
 
+#gps-time {
+    text-align: center;
+    margin-top: 1rem;
+}
+
 #data-preview {
     display: flex;
     flex-direction: column;

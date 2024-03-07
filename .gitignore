@@ -75,3 +75,6 @@ cython_debug/
 .DS_Store
 /src/.DS_Store
 /files
+/data
+.DS_Store
+src/.DS_Store
