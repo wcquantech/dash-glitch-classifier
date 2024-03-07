@@ -74,9 +74,10 @@ classifier_content = html.Div([
     html.Div([
         html.H4("3. Select your interested time of the strain data"),
         html.Div([
-            html.Button([
-                html.I(className="fa-solid fa-minus")
-            ], id="time-slider-minus", n_clicks=0, disabled=True),
+            html.Div([
+                html.Button("-1", id="time-slider-minus-1", n_clicks=0, disabled=True),
+                html.Button("-0.1", id="time-slider-minus-01", n_clicks=0, disabled=True),
+            ], className="time-slider-buttons"),
             dcc.Slider(
                 id="time-slider",
                 min=2,
@@ -88,11 +89,14 @@ classifier_content = html.Div([
                 disabled=True,
                 tooltip={"always_visible": True, "placement": "bottom"}
             ),
-            html.Button([
-                html.I(className="fa-solid fa-plus")
-            ], id="time-slider-plus", n_clicks=0, disabled=True)
+            html.Div([
+                html.Button("+0.1", id="time-slider-plus-01", n_clicks=0, disabled=True),
+                html.Button("+1", id="time-slider-plus-1", n_clicks=0, disabled=True)
+            ], className="time-slider-buttons")
         ], className="time-slider-div"),
-        html.H5(f"GPS Time: -", id="gps-time")
+        html.Div([
+            html.H5(f"GPS Time: -", id="gps-time")
+        ], className="time-input-div")
     ]),
     html.Div([
         html.H4("4. Data preview"),
@@ -146,8 +150,10 @@ def page_change(about_n_clicks, classifier_n_clicks):
 # Handle strain data upload
 @app.callback(Output("time-slider", "disabled"),
               Output("strain-uploader", "disabled"),
-              Output("time-slider-minus", "disabled"),
-              Output("time-slider-plus", "disabled"),
+              Output("time-slider-minus-01", "disabled"),
+              Output("time-slider-plus-01", "disabled"),
+              Output("time-slider-minus-1", "disabled"),
+              Output("time-slider-plus-1", "disabled"),
               Input("strain-uploader", "isCompleted"),
               Input("strain-uploader", "upload_id"),
               Input("strain-uploader", "fileNames"))
@@ -157,8 +163,8 @@ def strain_upload(isCompleted, upload_id, fileNames):
     if isCompleted:
         strain_path = os.path.join(upload_path, str(upload_id), fileNames[0])
         gps = find_gps(strain_path)
-        return False, True, False, False
-    return no_update, no_update, no_update, no_update
+        return False, True, False, False, False, False
+    return no_update, no_update, no_update, no_update, no_update, no_update
 
 # Handle showing GPS time
 @app.callback(Output("gps-time", "children"),
@@ -171,19 +177,31 @@ def update_gps_time(value):
 
 # Handle time buttons
 @app.callback(Output("time-slider", "value"),
-              Input("time-slider-minus", "n_clicks"),
-              Input("time-slider-plus", "n_clicks"),
+              Input("time-slider-minus-1", "n_clicks"),
+              Input("time-slider-minus-01", "n_clicks"),
+              Input("time-slider-plus-1", "n_clicks"),
+              Input("time-slider-plus-01", "n_clicks"),
               State("time-slider", "value"))
-def time_update(minus_n_clicks, plus_n_clicks, value):
+def time_update(minus_1_n_clicks, minus_01_n_clicks, plus_1_n_clicks, plus_01_n_clicks, value):
     if not ctx.triggered:
         return no_update
     button_id = ctx.triggered[0]["prop_id"].split(".")[0]
-    if button_id == "time-slider-minus":
+    if button_id == "time-slider-minus-1":
+        if value-1 >= 2:
+            return value - 1
+        else: 
+            return value
+    elif button_id == "time-slider-minus-01":
         if value-0.1 >= 2:
             return value - 0.1
         else: 
             return value
-    elif button_id == "time-slider-plus":
+    elif button_id == "time-slider-plus-1":
+        if value+1 <= 4094:
+            return value + 1
+        else:
+            return value
+    elif button_id == "time-slider-plus-01":
         if value+0.1 <= 4094:
             return value + 0.1
         else:
@@ -213,20 +231,27 @@ def data_preview(value):
               Input("time-slider", "value"))
 def classification(n_clicks, value):
     global strain_path
+    global gps
     if not n_clicks:
         raise PreventUpdate
-    imgsrc = plot_final_spectrogram(hdf5=strain_path, start=value-2, end=value+2)
-    buf = plot_final_spectrogram(hdf5=strain_path, start=value-2, end=value+2, to_predict=True)
-    prediction, prob_1, prob_2 = classify("Inception-V3", buf, glitch_class_list)
+    try:
+        imgsrc = plot_final_spectrogram(hdf5=strain_path, start=value-2, end=value+2)
+        buf = plot_final_spectrogram(hdf5=strain_path, start=value-2, end=value+2, to_predict=True)
+        prediction, prob_1, prob_2 = classify("Inception-V3", buf, glitch_class_list)
 
-    text = html.P("Multi-duration Q-Transformed spectrogram of the selected time")
-    if prob_2 is None:
-        msg = html.Div([html.P("{} ({:.3%})".format(prediction, prob_1))])
-    else:
-        msg = html.Div([
-            html.P("{} ({:.3%})".format(prediction, prob_1)),
-            html.P("{} ({:.3%})".format(prob_2[1], prob_2[0]))
+        text = html.Div([
+            html.P("Multi-duration Q-Transformed spectrogram of the selected time:"),
+            html.P(f"{(value-2):.1f}s to {(value+2):.1f}s from GPS time {gps}")
         ])
+        if prob_2 is None:
+            msg = html.Div([html.P("{} ({:.3%})".format(prediction, prob_1))])
+        else:
+            msg = html.Div([
+                html.P("{} ({:.3%})".format(prediction, prob_1)),
+                html.P("{} ({:.3%})".format(prob_2[1], prob_2[0]))
+            ])
+    except Exception as e:
+        return f"Error: {e}. Please try again."
     return [text, html.Img(src=imgsrc), msg]
 
 

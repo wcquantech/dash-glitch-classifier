@@ -81,11 +81,10 @@
 .time-slider-div button {
     background: #2db9f5;
     border: none;
-    border-radius: 50%;
+    border-radius: 8px;
     cursor: pointer;
     color: #fff;
     font-size: 1rem;
-    width: 2rem;
     height: 2rem;
     transition: all 0.3s;
 }
@@ -104,9 +103,28 @@
     margin-top: 1rem;
 }
 
+.time-slider-buttons {
+    display: flex;
+    gap: 1rem;
+}
+
+.time-input-div {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+#time-input {
+    font-size: 1rem;
+    border: none;
+    background: #efeeee;
+    padding: 0.5rem;
+    border-radius: 6px;
+}
+
 #gps-time {
     text-align: center;
-    margin-top: 1rem;
 }
 
 #data-preview {
