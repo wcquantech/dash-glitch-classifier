@@ -4,9 +4,13 @@ from PIL import Image
 import torch.nn.functional as F
 import torchvision.transforms as transform
 
+current_file_path = os.path.abspath(__file__)
+current_directory = os.path.dirname(current_file_path)
+project_directory = os.path.dirname(current_directory)
+
 # Model configurations
 config_inception = {
-    "model": os.path.join("src/models", "inception-v3_checkpoint.pt"),
+    "model": os.path.join(project_directory, "src/models", "inception-v3_checkpoint.pt"),
     "transforms": transform.Compose([
         transform.Resize([299, 299]),
         transform.ToTensor(),
@@ -15,7 +19,7 @@ config_inception = {
 }
 
 config_googlenet = {
-    "model": os.path.join("src/models", "google-net_checkpoint.pt"),
+    "model": os.path.join(project_directory, "src/models", "google-net_checkpoint.pt"),
     "transforms": transform.Compose([
         transform.Resize([224, 224]),
         transform.ToTensor(),

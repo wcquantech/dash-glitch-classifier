@@ -18,8 +18,11 @@ app = Dash(__name__,
 app.title = "GW Glitch Classifier"
 
 # Global variables
+current_file_path = os.path.abspath(__file__)
+current_directory = os.path.dirname(current_file_path)
+project_directory = os.path.dirname(current_directory)
 upload_path = os.environ.get('UPLOAD_PATH')
-du.configure_upload(app, upload_path)
+du.configure_upload(app, os.path.join(project_directory, upload_path))
 gps = 0
 strain_path = ""
 
