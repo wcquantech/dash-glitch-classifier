@@ -15,6 +15,8 @@ app = Dash(__name__,
            suppress_callback_exceptions=True
            )
 
+server = app.server
+
 app.title = "GW Glitch Classifier"
 
 # Global variables
@@ -294,4 +296,4 @@ def classification(n_clicks, value, model):
 
 
 if __name__ == "__main__":
-    app.run_server(debug=True)
+    app.run()
