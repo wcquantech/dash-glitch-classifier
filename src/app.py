@@ -33,7 +33,39 @@ glitch_class_list = [
 
 about = html.Div([
     html.H1("About This App"),
-    html.P("This app is a simple web application that allows you to upload a gravitational wave signal and classify it as a glitch or not a glitch.")
+    html.Br(),
+    html.H2("Background"),
+    html.P([
+        "This app is a simple web application that allows you to upload a gravitational wave signal (in HDF5 format) and classify it into one of the ",
+        html.A("23 classes of glitches (including 'No Glitch')", href="https://arxiv.org/pdf/2208.12849.pdf#pagemode=thumbs"),
+        "."
+    ]),
+    html.P([
+        "Glitches are noise signals recorded in auxiliary channels by the Michelson interferometers during the gravitational wave detection. " + 
+        "The presence of glitches surrounding the candidate events will negatively impact the searching sensitivity of potential gravitational wave events. " + 
+        "Due to the importance of identification and removal of glitches signals from the strain data, a science project called ",
+        html.A("Gravity Spy", href="https://www.zooniverse.org/projects/zooniverse/gravity-spy/about/research", target="_blank"),
+        " was hosted on the Zooniverse platform, " +
+        "aims to gather knowledge from citizens and scientists around the world to improve the efficiency and accuracy in glitch classification problem using deep learning methods. "
+    ]),
+    html.P([
+        "The app uses pre-trained deep learning models to classify the signal. These models were trained by Jianqi Yan and Alex P Leung, " + 
+            "utilizing Generative Adversarial Networks (GANs) to augment the original Gravity Spy dataset with additional training data. " +
+            "For more detailed insights, we encourage users to explore their works ",
+        html.Span("'On improving the performance of glitch classification for gravitational wave detection by using Generative Adversarial Networks'", style={"font-weight": "bold"}),
+            ", available at ",
+        html.A("@https://doi.org/10.1093/mnras/stac1996", href="https://doi.org/10.1093/mnras/stac1996", target="_blank"),
+        "."
+    ]),
+    html.Br(),
+    html.H2("How to use this app"),
+    html.P("To use this app, you need to follow the steps below:"),
+    html.Ul([
+        html.Li(html.Span(["Upload a .hdf5 file of strain data from ", html.A('Gravitational Wave Open Science Center (GWOSC)', href='https://www.gw-openscience.org/data', target='_blank')])),
+        html.Li("Select a model for glitch classification"),
+        html.Li("Select your interested time of the strain data"),
+        html.Li("Click the 'Submit' button to see the multi-duration (1.0s + 2.0s + 4.0s) Q-Transformed spectrogram of the selected time and the classification result")
+    ])
 ])
 
 classifier_content = html.Div([
@@ -139,7 +171,7 @@ app.layout = page
               Input("classifier", "n_clicks"))
 def page_change(about_n_clicks, classifier_n_clicks):
     if not ctx.triggered:
-        return classifier
+        return about
     button_id = ctx.triggered[0]["prop_id"].split(".")[0]
     if button_id == "about":
         return about
