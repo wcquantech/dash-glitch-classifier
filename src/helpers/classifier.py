@@ -10,7 +10,8 @@ project_directory = os.path.dirname(current_directory)
 
 # Model configurations
 config_inception = {
-    "model": os.path.join(project_directory, "src/models", "inception-v3_checkpoint.pt"),
+    # The path is relative to the project directory
+    "model": os.path.join(project_directory, "models", "inception-v3_checkpoint.pt"),
     "transforms": transform.Compose([
         transform.Resize([299, 299]),
         transform.ToTensor(),
@@ -19,7 +20,8 @@ config_inception = {
 }
 
 config_googlenet = {
-    "model": os.path.join(project_directory, "src/models", "google-net_checkpoint.pt"),
+    # The path is relative to the project directory
+    "model": os.path.join(project_directory, "models", "google-net_checkpoint.pt"),
     "transforms": transform.Compose([
         transform.Resize([224, 224]),
         transform.ToTensor(),
