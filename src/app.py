@@ -5,8 +5,8 @@ from dash.exceptions import PreventUpdate
 import os
 import uuid
 from dotenv import load_dotenv
-from helpers import find_gps, plot_4s_strain, plot_final_spectrogram
-from classifier import classify
+from helpers.helpers import find_gps, plot_4s_strain, plot_final_spectrogram
+from helpers.classifier import classify
 
 load_dotenv()
 
